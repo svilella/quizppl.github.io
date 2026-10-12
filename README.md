@@ -29,6 +29,12 @@ tools/
   artifact_page.py         variante di index.html per la pubblicazione come Artifact su claude.ai
 ```
 
+## Pubblicazione su GitHub Pages
+
+Il sito è la cartella `public/`, non la radice del repository. Il workflow
+`.github/workflows/pages.yml` la pubblica a ogni push su `main`:
+in **Settings → Pages → Build and deployment → Source** scegliere **GitHub Actions**.
+
 ## Avvio in locale
 
 I moduli ES non funzionano aprendo `index.html` con doppio clic: serve un server.
@@ -96,7 +102,12 @@ Appena vista vale 0,40, dopo 1 giorno 0,57, dopo 3 giorni 0,78, dopo una settima
 Le costanti sono in `js/core/sampler.js`. Con più materie la sessione si ripartisce in parti
 uguali oppure in proporzione al numero di domande di ciascuna.
 
-## Dati dell'utente
+## Aspetto e logo
+
+Colori e font sono i token in testa a `css/app.css`. Il logo si imposta in `js/config.js` (`BRAND.logo`):
+se il file non esiste o la voce è `null`, la testata si mostra senza logo.
+
+## Dati dell’utente
 
 Statistiche per domanda, storico sessioni, preferenze e sessione in corso stanno nel
 `localStorage` del browser (chiave `ppl-quiz:v1`): ogni persona che usa l'app ha i propri dati,

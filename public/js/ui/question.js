@@ -75,7 +75,7 @@ export function explanationPanel(q) {
       loaded = true;
       body.replaceChildren(h("p", { class: "muted" }, "Caricamento…"));
       const ex = await getExplanation(q.id);
-      body.replaceChildren(
+      body.replaceChildren(...[
         ex
           ? h("div", { class: "prose", html: miniMarkdown(ex.text) })
           : h("div", { class: "expl-empty" },
@@ -83,7 +83,7 @@ export function explanationPanel(q) {
               h("p", {}, "Le spiegazioni verranno aggiunte in un secondo momento nel file data/explanations.json."),
             ),
         ex?.source ? h("p", { class: "expl-source" }, `Fonte: ${ex.source}`) : null,
-      );
+      ].filter(Boolean));
     }
     return open;
   }

@@ -1,4 +1,6 @@
 import { h, pct, formatWhen } from "./dom.js";
+import { BRAND } from "../config.js";
+import { assetUrl } from "../data/bank.js";
 
 export const PASS_MARK = 0.75; // soglia di superamento dell'esame teorico PPL
 
@@ -165,11 +167,15 @@ export function renderHome(root, { bank, store, onStart, onResume, onDiscard, on
 
   root.replaceChildren(...[
     h("header", { class: "masthead" },
-      h("p", { class: "eyebrow" }, "Quiz d’esame APPL · teoria PPL"),
-      h("h1", {}, "Banco Domande PPL"),
-      h("p", { class: "lede" },
-        `${bank.questions.length.toLocaleString("it-IT")} domande in ${bank.subjects.length} materie`,
-        totalSeen ? ` · ${totalSeen.toLocaleString("it-IT")} già viste` : ""),
+      brandLogo(),
+      h("div", { class: "masthead-text" },
+        h("p", { class: "eyebrow" }, "Quiz d’esame APPL · teoria PPL"),
+        h("h1", {}, "Banco Domande PPL"),
+        h("p", { class: "lede" },
+          `${bank.questions.length.toLocaleString("it-IT")} domande in ${bank.subjects.length} materie`,
+          totalSeen ? ` · ${totalSeen.toLocaleString("it-IT")} già viste` : ""),
+      ),
+      ribbon(),
     ),
     resumeBanner,
     h("div", { class: "home-grid" },
@@ -204,4 +210,33 @@ export function renderHome(root, { bank, store, onStart, onResume, onDiscard, on
     ),
   ].filter(Boolean));
   update();
+}
+
+/** Logo facoltativo (vedi config.js): resta nascosto finché non si carica, sparisce se manca. */
+function brandLogo() {
+  if (!BRAND.logo) return null;
+  const img = h("img", { class: "brand-logo", src: assetUrl(BRAND.logo), alt: BRAND.logoAlt, hidden: true });
+  img.addEventListener("load", () => { img.hidden = false; });
+  img.addEventListener("error", () => img.remove());
+  return img;
+}
+
+/** Nastro tricolore decorativo, come nelle slide del corso. */
+function ribbon() {
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", "0 0 200 240");
+  svg.setAttribute("class", "ribbon");
+  svg.setAttribute("aria-hidden", "true");
+  const strands = [["--green", -16], ["--white-strand", 0], ["--red", 16]];
+  for (const [color, dx] of strands) {
+    const p = document.createElementNS(NS, "path");
+    p.setAttribute("d", `M${150 + dx} -10 C ${70 + dx} 50, ${215 + dx} 110, ${130 + dx} 170 S ${60 + dx} 230, ${110 + dx} 260`);
+    p.setAttribute("fill", "none");
+    p.setAttribute("stroke", `var(${color})`);
+    p.setAttribute("stroke-width", "15");
+    p.setAttribute("stroke-linecap", "round");
+    svg.append(p);
+  }
+  return svg;
 }

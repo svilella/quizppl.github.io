@@ -1,3 +1,5 @@
+# Pubblica la cartella public/ su GitHub Pages a ogni push su main.
+# In Settings → Pages → Build and deployment → Source scegliere "GitHub Actions".
 name: Deploy su GitHub Pages
 
 on:

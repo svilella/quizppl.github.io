@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+Icon?
+
+# Google Drive (file temporanei di sincronizzazione)
+.tmp.drive*
+*.gdoc
+*.gsheet
+
+# Python
+__pycache__/
+*.pyc
+
+# editor
+.vscode/
+.idea/

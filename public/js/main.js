@@ -11,6 +11,7 @@ import { renderQuiz } from "./ui/quiz.js";
 import { renderExam } from "./ui/exam.js";
 import { renderReport } from "./ui/report.js";
 import { closeModal } from "./ui/modal.js";
+import { mountRibbon } from "./ui/ribbon.js";
 import { h } from "./ui/dom.js";
 
 const root = document.getElementById("app");
@@ -23,6 +24,7 @@ function mount(view, props) {
 }
 
 async function boot() {
+  mountRibbon();
   let bank;
   try {
     bank = await loadBank();

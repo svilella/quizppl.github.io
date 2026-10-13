@@ -14,3 +14,6 @@ __pycache__/
 # editor
 .vscode/
 .idea/
+
+# anteprime che l'app Claude salva nella cartella
+Claude outputs/

@@ -18,6 +18,12 @@
   --ko: #c23624;
   --ko-bg: #fbe8e4;
   --badge: #ffffff;           /* fondo del logo, bianco in entrambi i temi */
+  --ribbon-green: #3b9b53;    /* fibre del nastro: colore pieno e ombra */
+  --ribbon-green-deep: #1c6631;
+  --ribbon-white: #eef0ee;
+  --ribbon-white-deep: #aab2ab;
+  --ribbon-red: #e04b34;
+  --ribbon-red-deep: #a3291a;
   --shadow: 0 1px 2px rgb(20 22 20 / 0.06), 0 4px 16px rgb(20 22 20 / 0.05);
 
   --f-display: "Libre Caslon Text", "Times New Roman", Times, serif;
@@ -32,6 +38,8 @@
     --paper: #0f110f; --surface: #171a17; --ink: #eceeec; --muted: #9ba39d; --line: #2a2f2b;
     --accent: #eceeec; --accent-ink: #111311; --accent-soft: #232823;
     --green: #4fb468; --white-strand: #3a403b; --red: #ec604b;
+    --ribbon-green: #4cb365; --ribbon-green-deep: #24703a; --ribbon-white: #e6e9e6; --ribbon-white-deep: #8d968f;
+    --ribbon-red: #ee5f48; --ribbon-red-deep: #a8331f;
     --ok: #5cc077; --ok-bg: #14301c; --ko: #f26c57; --ko-bg: #3a1813;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
     color-scheme: dark;
@@ -41,6 +49,8 @@
   --paper: #0f110f; --surface: #171a17; --ink: #eceeec; --muted: #9ba39d; --line: #2a2f2b;
   --accent: #eceeec; --accent-ink: #111311; --accent-soft: #232823;
   --green: #4fb468; --white-strand: #3a403b; --red: #ec604b;
+  --ribbon-green: #4cb365; --ribbon-green-deep: #24703a; --ribbon-white: #e6e9e6; --ribbon-white-deep: #8d968f;
+  --ribbon-red: #ee5f48; --ribbon-red-deep: #a8331f;
   --ok: #5cc077; --ok-bg: #14301c; --ko: #f26c57; --ko-bg: #3a1813;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   color-scheme: dark;
@@ -51,17 +61,19 @@
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  background:
-    linear-gradient(to right, var(--green) 0 33.33%, var(--white-strand) 0 66.66%, var(--red) 0) top / 100% 4px no-repeat,
-    var(--paper);
+  background: var(--paper);
+  position: relative;
+  overflow-x: hidden;
   color: var(--ink);
   font: 400 1.0625rem/1.55 var(--f-body);
 }
 #app {
+  position: relative;
+  z-index: 1;
   max-width: 1080px;
   margin: 0 auto;
   padding-inline: var(--gutter);
-  padding-block: 20px 64px;
+  padding-block: 20px 40px;
   display: grid;
   gap: 20px;
 }
@@ -144,11 +156,17 @@ button { font: inherit; color: inherit; }
   font-size: .78rem; font-weight: 700; color: var(--muted);
 }
 .masthead h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: 1.05; }
-.ribbon {
-  position: absolute; right: -8px; top: -20px; width: clamp(120px, 18vw, 190px); height: auto;
-  pointer-events: none; z-index: 0;
+/* nastro tricolore: livello decorativo a tutta altezza, dietro ai contenuti */
+.ribbon-layer {
+  position: absolute; top: 0; right: 0; z-index: 0;
+  pointer-events: none; overflow: hidden;
 }
-@media (max-width: 640px) { .ribbon { display: none; } }
+.ribbon-layer svg { display: block; }
+/* su schermi larghi il contenuto si sposta a sinistra e lascia al nastro la sua colonna, come nelle slide */
+@media (min-width: 1180px) {
+  #app { margin-left: max(24px, calc((100vw - 1080px - 260px) / 2)); margin-right: auto; }
+}
+@media (max-width: 700px) { .ribbon-layer { opacity: .6; } }
 .lede { color: var(--muted); font-variant-numeric: tabular-nums; }
 
 .home-grid { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); align-items: start; }
@@ -457,4 +475,19 @@ button { font: inherit; color: inherit; }
 @media (max-width: 520px) {
   .quiz-actions .btn { flex: 1; min-width: 0; }
   .quiz-actions .btn-primary { margin-left: 0; min-width: 0; }
+}
+
+/* ---------- avvertenza in fondo alla pagina ---------- */
+.site-footer {
+  position: relative; z-index: 1;
+  max-width: 1080px; margin: 0 auto;
+  padding-inline: var(--gutter); padding-block: 0 32px;
+}
+.site-footer p {
+  max-width: 72ch; margin: 0;
+  font-size: .78rem; line-height: 1.5; color: var(--muted);
+  padding-top: 14px; border-top: 1px solid var(--line);
+}
+@media (min-width: 1180px) {
+  .site-footer { margin-left: max(24px, calc((100vw - 1080px - 260px) / 2)); margin-right: auto; }
 }

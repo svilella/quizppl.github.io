@@ -78,7 +78,7 @@ export function createStore(backend = localBackend) {
      */
     importData(data) {
       if (!data || data.app !== EXPORT_APP || typeof data.stats !== "object") {
-        throw new Error("Il file non è un'esportazione di Banco Domande PPL.");
+        throw new Error("Il file non è un'esportazione di PPL Question Bank.");
       }
       let questions = 0;
       for (const [qid, theirs] of Object.entries(data.stats || {})) {

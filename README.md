@@ -1,4 +1,4 @@
-# Banco Domande PPL
+# PPL Question Bank
 
 Web app statica per allenarsi sui quiz d'esame APPL/PPL:
 

@@ -5,6 +5,7 @@
 import { h, LETTERS, miniMarkdown } from "./dom.js";
 import { getExplanation } from "../data/bank.js";
 import { openLightbox } from "./lightbox.js";
+import { openIssueDialog } from "./issue.js";
 
 const looksLikeCode = (s) => {
   const letters = s.replace(/[^A-Za-z]/g, "");
@@ -35,21 +36,25 @@ function figure(src, q) {
 }
 
 /**
- * Elenco risposte. Prima della scelta sono pulsanti; dopo, il pulsante scelto
- * diventa rosso se sbagliato e la risposta corretta diventa verde.
+ * Elenco risposte.
+ *  - allenamento: dopo la scelta il pulsante scelto diventa rosso se sbagliato
+ *    e la risposta corretta diventa verde (reveal automatico);
+ *  - esame: la scelta resta solo evidenziata e si può cambiare (reveal: false);
+ *  - report: reveal: true anche per le domande lasciate senza risposta.
  */
-export function answerList(q, { chosen = null, onChoose } = {}) {
-  const revealed = chosen !== null;
+export function answerList(q, { chosen = null, onChoose, reveal = chosen !== null } = {}) {
   return h("ol", { class: "answers", role: "list" },
     q.answers.map((text, i) => {
-      const state = !revealed ? "" : i === q.correct ? "is-correct" : i === chosen ? "is-wrong" : "is-dim";
-      const mark = !revealed ? null : i === q.correct ? "Corretta" : i === chosen ? "La tua risposta" : null;
+      const state = reveal
+        ? (i === q.correct ? "is-correct" : i === chosen ? "is-wrong" : "is-dim")
+        : (i === chosen ? "is-selected" : "");
+      const mark = !reveal ? null : i === q.correct ? "Corretta" : i === chosen ? "La tua risposta" : null;
       return h("li", {},
         h("button", {
           class: `answer ${state}`,
           type: "button",
-          disabled: revealed || !onChoose,
-          "aria-pressed": revealed && i === chosen ? "true" : null,
+          disabled: reveal || !onChoose,
+          "aria-pressed": i === chosen ? "true" : "false",
           "data-index": i,
           onclick: () => onChoose?.(i),
         },
@@ -88,4 +93,26 @@ export function explanationPanel(q) {
     return open;
   }
   return { panel, toggle };
+}
+
+/** Stellina "segna la domanda" + "segnala un errore", uguali in quiz, esame e report. */
+export function questionTools(q, bank, store, { chosen = () => null } = {}) {
+  const star = h("button", {
+    class: "tool tool-star", type: "button",
+    "aria-pressed": String(store.isFlagged(q.id)),
+    title: "Segna la domanda per ripassarla",
+    onclick: () => {
+      const on = store.toggleFlag(q.id);
+      star.setAttribute("aria-pressed", String(on));
+      star.lastChild.textContent = on ? "Segnata" : "Segna";
+    },
+  },
+    h("span", { class: "tool-icon", "aria-hidden": "true" }, "★"),
+    h("span", {}, store.isFlagged(q.id) ? "Segnata" : "Segna"),
+  );
+  const report = h("button", {
+    class: "tool", type: "button", title: "Segnala un errore in questa domanda",
+    onclick: () => openIssueDialog(q, bank, { chosen: chosen() }),
+  }, h("span", { class: "tool-icon", "aria-hidden": "true" }, "⚑"), h("span", {}, "Segnala errore"));
+  return h("div", { class: "tools" }, star, report);
 }

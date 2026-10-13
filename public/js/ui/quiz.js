@@ -1,12 +1,13 @@
 import { h } from "./dom.js";
-import { questionBody, answerList, explanationPanel } from "./question.js";
+import { questionBody, answerList, explanationPanel, questionTools } from "./question.js";
 import { lightboxOpen } from "./lightbox.js";
+import { modalOpen } from "./modal.js";
 
 /**
  * Vista quiz: una domanda alla volta, esito immediato.
  * Tastiera: A–E o 1–5 per rispondere · Invio / → per proseguire · S per la spiegazione.
  */
-export function renderQuiz(root, { bank, session, onAnswer, onMove, onFinish, onQuit }) {
+export function renderQuiz(root, { bank, store, session, onAnswer, onMove, onFinish, onQuit }) {
   let keyHandler;
 
   function draw() {
@@ -72,6 +73,7 @@ export function renderQuiz(root, { bank, session, onAnswer, onMove, onFinish, on
               chosen === q.correct ? "Risposta corretta" : `Risposta errata · la corretta è la ${"ABCDE"[q.correct]}`)
           : null,
         expl.panel,
+        questionTools(q, bank, store, { chosen: () => session.currentChoice }),
       ),
       h("div", { class: "quiz-actions" },
         answered ? explBtn : h("span", { class: "hint" }, "Scegli una risposta · tasti A–D"),
@@ -80,7 +82,7 @@ export function renderQuiz(root, { bank, session, onAnswer, onMove, onFinish, on
     );
 
     keyHandler = (e) => {
-      if (e.metaKey || e.ctrlKey || e.altKey || lightboxOpen()) return;
+      if (e.metaKey || e.ctrlKey || e.altKey || lightboxOpen() || modalOpen()) return;
       if (e.target.closest?.("input, textarea")) return;
       const k = e.key.toUpperCase();
       if (!answered) {

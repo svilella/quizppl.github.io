@@ -1,23 +1,41 @@
 /**
- * Selezione casuale pesata delle domande.
+ * Selezione delle domande con ripasso intelligente (ripetizione dilazionata).
  *
- * Ogni domanda ha peso 1 se mai vista; se vista di recente il peso scende
- * fino a (1 − MAX_PENALTY) e torna verso 1 con decadimento esponenziale.
- * La penalità è volutamente leggera: una domanda appena vista resta
- * estraibile, solo meno probabile.
+ * Ogni domanda ha una "serie" = risposte giuste consecutive. La serie decide
+ * dopo quanto la domanda torna "in scadenza":
  *
- *   peso = 1 − MAX_PENALTY · e^(−giorni_trascorsi / DECAY_DAYS)
+ *   serie       0 (sbagliata)  1     2     3     4      5+
+ *   intervallo  6 ore          1 g   3 g   7 g   16 g   35 g
  *
- *   appena vista → 0.40   ·   dopo 1 g → 0.57   ·   dopo 3 g → 0.78   ·   dopo 7 g → 0.94
+ * Il peso nell'estrazione casuale ne deriva:
+ *   - mai vista                          → 1
+ *   - sbagliata, in scadenza             → 2.5   (torna più spesso)
+ *   - sbagliata, appena vista            → da 0.5 a 2.5 man mano che passa il tempo
+ *   - giusta, in scadenza                → 1
+ *   - giusta, non ancora in scadenza     → da 0.25 a 1 (le domande che sai si diradano)
  */
-export const MAX_PENALTY = 0.6;
-export const DECAY_DAYS = 3;
+export const INTERVAL_DAYS = [0.25, 1, 3, 7, 16, 35];
 const DAY = 86_400_000;
+
+const streakOf = (stat) => stat.streak ?? (stat.lastOk ? 1 : 0);
+
+/** Frazione dell'intervallo trascorsa dall'ultimo tentativo (≥ 1 = in scadenza). */
+export function dueRatio(stat, now = Date.now()) {
+  if (!stat?.last) return Infinity;
+  const interval = INTERVAL_DAYS[Math.min(streakOf(stat), INTERVAL_DAYS.length - 1)] * DAY;
+  return Math.max(0, now - stat.last) / interval;
+}
+
+/** Da ripassare: già vista e sbagliata l'ultima volta, oppure giusta ma con l'intervallo scaduto. */
+export function needsReview(stat, now = Date.now()) {
+  return Boolean(stat?.last) && (!stat.lastOk || dueRatio(stat, now) >= 1);
+}
 
 export function weightFor(stat, now = Date.now()) {
   if (!stat?.last) return 1;
-  const days = Math.max(0, now - stat.last) / DAY;
-  return 1 - MAX_PENALTY * Math.exp(-days / DECAY_DAYS);
+  const r = dueRatio(stat, now);
+  if (!stat.lastOk) return r >= 1 ? 2.5 : 0.5 + 2 * r;
+  return r >= 1 ? 1 : 0.25 + 0.75 * r;
 }
 
 /**
@@ -66,7 +84,6 @@ export function allocate(groups, total, mode = "equal") {
       given += n;
     }
     if (given === 0) {
-      // distribuisce le unità residue, prima ai gruppi più capienti
       open.sort((a, b) => (sizes[b] - out[b]) - (sizes[a] - out[a]));
       for (const i of open) {
         if (left - given === 0) break;
@@ -79,20 +96,32 @@ export function allocate(groups, total, mode = "equal") {
   return out;
 }
 
-/**
- * Costruisce l'elenco di domande di una sessione.
- * @param {object[]} pool       domande candidate (già filtrate)
- * @param {object}   opts       { count, distribution, stats, now }
- */
-export function buildSession(pool, { count, distribution = "equal", stats = {}, now = Date.now() }) {
-  const bySubject = new Map();
+function groupBySubject(pool) {
+  const by = new Map();
   for (const q of pool) {
-    if (!bySubject.has(q.subject)) bySubject.set(q.subject, []);
-    bySubject.get(q.subject).push(q);
+    if (!by.has(q.subject)) by.set(q.subject, []);
+    by.get(q.subject).push(q);
   }
-  const groups = [...bySubject.values()];
+  return by;
+}
+
+/** Sessione di allenamento: domande mescolate tra le materie. */
+export function buildSession(pool, { count, distribution = "equal", stats = {}, now = Date.now() }) {
+  const groups = [...groupBySubject(pool).values()];
   const quotas = allocate(groups, count, distribution);
   const w = (q) => weightFor(stats[q.id], now);
-  const picked = groups.flatMap((g, i) => weightedSample(g, quotas[i], w));
-  return shuffle(picked);
+  return shuffle(groups.flatMap((g, i) => weightedSample(g, quotas[i], w)));
+}
+
+/**
+ * Simulazione d'esame: per ogni materia il numero di domande previsto,
+ * raggruppate per materia come nei fogli d'esame reali.
+ */
+export function buildExam(bank, subjects, { stats = {}, now = Date.now() } = {}) {
+  const w = (q) => weightFor(stats[q.id], now);
+  return subjects.flatMap((sid) => {
+    const paper = bank.exam.papers[sid];
+    const qs = bank.bySubject.get(sid) || [];
+    return shuffle(weightedSample(qs, Math.min(paper?.questions ?? 0, qs.length), w));
+  });
 }

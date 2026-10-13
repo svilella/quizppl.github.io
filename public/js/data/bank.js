@@ -7,9 +7,13 @@ const BASE = new URL("../../", import.meta.url);
 export const assetUrl = (path) => new URL(path, BASE).href;
 
 export async function loadBank() {
-  const res = await fetch(assetUrl("data/bank.json"));
+  const [res, examRes] = await Promise.all([
+    fetch(assetUrl("data/bank.json")),
+    fetch(assetUrl("data/exam.json")).catch(() => null),
+  ]);
   if (!res.ok) throw new Error(`Impossibile caricare il banco domande (HTTP ${res.status}).`);
   const raw = await res.json();
+  const exam = examRes?.ok ? await examRes.json() : { passMark: 0.75, papers: {} };
 
   const subjects = raw.subjects.slice().sort((a, b) => a.code - b.code);
   const subjectById = new Map(subjects.map((s) => [s.id, s]));
@@ -26,6 +30,8 @@ export async function loadBank() {
     byId,
     bySubject,
     excluded: raw.questions.length - questions.length,
+    /** struttura della simulazione d'esame: { passMark, papers: { [materia]: { questions, minutes } } } */
+    exam: { passMark: exam.passMark ?? 0.75, source: exam.source, papers: exam.papers || {} },
     imageUrl: (name) => assetUrl(`img/${name}`),
   };
 }

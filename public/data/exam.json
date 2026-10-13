@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "passMark": 0.75,
+  "source": "Esame teorico PPL(A) ENAC: 20 domande per Regolamentazione e Meteorologia (40 min), 20 per Navigazione (60 min), 12 per ciascuna delle altre materie (25 min). Soglia 75% per materia. Verificare con la scuola eventuali aggiornamenti.",
+  "papers": {
+    "regolamentazione": { "questions": 20, "minutes": 40 },
+    "aeromobili":       { "questions": 12, "minutes": 25 },
+    "prestazioni":      { "questions": 12, "minutes": 25 },
+    "medicina":         { "questions": 12, "minutes": 25 },
+    "meteorologia":     { "questions": 20, "minutes": 40 },
+    "navigazione":      { "questions": 20, "minutes": 60 },
+    "procedure":        { "questions": 12, "minutes": 25 },
+    "comunicazioni":    { "questions": 12, "minutes": 25 },
+    "principi-volo":    { "questions": 12, "minutes": 25 }
+  }
+}
